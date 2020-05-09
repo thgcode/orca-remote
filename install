@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+from glob import glob
+import os
+import shutil
+import sys
+
+def replace_string(text, default, new):
+    return text.replace('"%s"' % default, '"%s"' % new)
+
+def make_orca_customizations(nvda_remote_host, nvda_remote_port, nvda_remote_key, destfile):
+    with open("orca-customizations.py", "r") as f:
+        customizations = f.read()
+        customizations = replace_string(customizations, "host", nvda_remote_host)
+        customizations = customizations.replace("6837", nvda_remote_port)
+        customizations = replace_string(customizations, "key", nvda_remote_key)
+        with open(destfile, "w") as f2:
+            f2.write(customizations)
+
+def main():
+    if len(sys.argv) < 4:
+        print("Usage: %s NVDA_REMOTE_ADDRESS NVDA_REMOTE_PORT NVDA_REMOTE_KEY" % sys.argv[0])
+        return 1
+
+    orca_folder = os.path.expanduser("~/.local/share/orca")
+    input("Installing Orca Remote to %s. Press Enter to continue or Control C to abort:" % orca_folder)
+
+    print("Backing up your orca-customizations...")
+    shutil.copy("%s/orca-customizations.py" % orca_folder, "%s/orca-customizations-backup.py" % orca_folder)
+
+    print("Creating customizations...")
+    make_orca_customizations(sys.argv[1], sys.argv[2], sys.argv[3], "%s/orca-customizations.py" % orca_folder)
+
+    print("Copying NVDA Remote libraries...")
+    for file in glob("orca-scripts/*.py"):
+        shutil.copy(file, "%s/%s" % (orca_folder, file))
+
+    print("Instalation complete. You can now replace Orca.")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

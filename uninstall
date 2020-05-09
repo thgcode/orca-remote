@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+
+from glob import glob
+import os
+
+orca_folder = os.path.expanduser("~/.local/share/orca")
+
+os.remove("%s/orca-customizations.py" % orca_folder)
+
+os.rename("%s/orca-customizations-backup.py" % orca_folder, "%s/orca-customizations.py" % orca_folder)
+
+for file in glob("orca-scripts/*.py"):
+    os.remove("%s/%s" % (orca_folder, file))
+
+print("Uninstallation complete.")
