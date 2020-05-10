@@ -23,7 +23,7 @@ transport = RelayTransport(mySerializer, (YOUR_NVDAREMOTE_SERVER_ADDRESS, YOUR_N
 def try_run_thread():
     try:
         transport.run()
-    except exception:
+    except Exception:
         print("Error in thread")
         traceback.print_exc()
 
@@ -33,19 +33,25 @@ t.daemon = True
 t.start()
 
 # Patch Orca functions
-old_speak = SpeechServer.speak
+old_speak = SpeechServer._speak
+old_speakCharacter = SpeechServer.speakCharacter
 old_stop = SpeechServer.stop
 
-def my_speak(self, text=None, acss=None, interrupt=True):
+def my_speak(self, text, acss, **kw):
     if text:
         transport.send(type="speak", sequence=text)
-    return old_speak(self, text, acss, interrupt)
+    return old_speak(self, text, acss, **kw)
+
+def my_speakCharacter(self, character, acss=None):
+    transport.send(type="speak", sequence=[character])
+    return old_speakCharacter(self, character, acss)
 
 def my_stop(self):
     transport.send(type="cancel")
     return old_stop(self)
 
-SpeechServer.speak = my_speak
+SpeechServer._speak = my_speak
+SpeechServer.speakCharacter = my_speakCharacter
 SpeechServer.stop = my_stop
 
 print("Orca patched")
